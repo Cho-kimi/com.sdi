@@ -24,7 +24,7 @@ public class PreMBOMImpl implements PreMBOM {
 		this.topName = topMBOMLineName;
 		this.sourceComponent = bomline;
 		
-		//this.topBOMLine = owningBuilder.generateMBOMLine(bomline);
+		this.topBOMLine = owningBuilder.generateMBOMLine(topMBOMLineName, bomline);
 	}
 
 	@Override

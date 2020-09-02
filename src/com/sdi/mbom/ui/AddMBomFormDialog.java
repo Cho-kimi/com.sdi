@@ -17,10 +17,13 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 
 import com.sdi.mbom.MBOM;
+import com.sdi.mbom.MBOMLine;
 import com.sdi.mbom.PreMBOM;
 import com.teamcenter.rac.aif.AbstractAIFDialog;
 import com.teamcenter.rac.aif.InterfaceAIFOperationListener;
 import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.util.PropertyLayout;
 import com.teamcenter.rac.util.VerticalLayout;
 import com.teamcenter.rac.util.iTextField;
@@ -38,6 +41,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	private static final long serialVersionUID = 3620775456570162810L;
 	
 	private JPanel contentPane;
+	private JButton addButton;
 	private JButton createButton;
 	private JButton cancelButton;
 	private iTextField mBomTopId;
@@ -58,14 +62,13 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	
 	public AddMBomFormDialog(Frame frame)
 	{
-	  super(frame, false);
-	
-	  initUI();
+		super(frame, false);
+
+		initUI();
 	}
 	
 	private void initUI()
 	{
-		//Header header = new Header(, "M-BOM 积己");
 		setTitle("M-BOM 积己");
 		
 		this.contentPane = ((JPanel)getContentPane());
@@ -73,7 +76,6 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		this.contentPane.setLayout(new VerticalLayout());
 		this.contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 		
-		//this.contentPane.add("bound.bind.center.center", header);
 		this.contentPane.add("bound.bind.center.center", getHeaderPanel());
 		this.contentPane.add("bound.bind.center.center", getDataPanel());
 		this.contentPane.add("bound.bind.center.center", getButtonPanel());
@@ -112,21 +114,24 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 
 	private JPanel getButtonPanel()
 	{
-	  JPanel buttonPanel = new JPanel(new FlowLayout(2, 10, 0));
-	  buttonPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-	
-	  this.createButton = new JButton("积己");
-	  this.cancelButton = new JButton("秒家");
-	
-	  buttonPanel.setOpaque(false);
-	
-	  this.createButton.addActionListener(this);
-	  this.cancelButton.addActionListener(this);
-	
-	  buttonPanel.add(this.createButton);
-	  buttonPanel.add(this.cancelButton);
-	
-	  return buttonPanel;
+		JPanel buttonPanel = new JPanel(new FlowLayout(2, 10, 0));
+		buttonPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+		
+		this.addButton = new JButton("烙矫积己");
+		this.createButton = new JButton("积己");
+		this.cancelButton = new JButton("秒家");
+		
+		buttonPanel.setOpaque(false);
+		
+		this.addButton.addActionListener(this);
+		this.createButton.addActionListener(this);
+		this.cancelButton.addActionListener(this);
+		
+		buttonPanel.add(this.addButton);
+		buttonPanel.add(this.createButton);
+		buttonPanel.add(this.cancelButton);
+		
+		return buttonPanel;
 	}
 	
 	private JPanel getDataPanel()
@@ -198,18 +203,18 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	
 	public void actionPerformed(ActionEvent event)
 	{
-	  Object obj = event.getSource();
-	
-	  if (obj.equals(this.createButton))
-	  {
-	    
-	  }
-	  else if (obj.equals(this.cancelButton))
-	  {
-	    setVisible(false);
-	    dispose();
-	  }
-	  
+		Object obj = event.getSource();
+		
+		if (obj.equals(this.addButton)){
+			addMBOM(mbom);
+		}
+		else if (obj.equals(this.createButton)){
+		  
+		}
+		else if (obj.equals(this.cancelButton)){
+		  setVisible(false);
+		  dispose();
+		}
 	}
 
 	@Override
@@ -227,12 +232,22 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	public void setMBOM(MBOM mbom) {
 		this.mbom = mbom;
 		
+		
 		if(mbom != null) {
 			loadMBOM(mbom);
 		}else {
 			clearMBOM(mbom);
 		}
 		
+	}
+	
+	public void addMBOM(MBOM mbom) {
+		
+		if(mbom != null) {
+			loadMBOM(mbom);
+		}else {
+			clearMBOM(mbom);
+		}
 	}
 	
 	public MBOM getMBOM() {
@@ -257,11 +272,52 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		
 		if(mbom instanceof PreMBOM) {
 			 this.isPreMBOM = true;
+			 
+			 PreMBOM preMBOM = (PreMBOM)mbom;
+			 
+			 MBOMLine topLine = preMBOM.getTopBOMLine();
+			 addTableRow(0, tableModel, topLine);
+
 		}else {
 			
 			//update 扁粮 M-BOM 沥焊 诀单捞飘
 			
 		}
+	}
+
+	private void addTableRow(int level, DialogTableModel tableModel, MBOMLine mbomLine) {
+		
+		TCComponentBOMLine bomline = null;
+		
+		 if(mbomLine != null) {
+			 
+			 if(mbomLine.isPermanent()) {
+				 bomline= mbomLine.getPermanentBOMLine();
+			 }else {
+				 bomline =mbomLine.getSourceBOMLine();
+			 }
+			 
+			try {
+				 String itemId = bomline.getItem().getStringProperty("item_id");
+				 String itemName = bomline.getItem().getStringProperty("object_name");
+				 String address  = bomline.getStringProperty("m2_MbomAddress");;
+				 String refDeg = bomline.getStringProperty("bl_ref_designator");
+				 String status = "措扁";
+				 
+				 tableModel.addRow(new String[] {String.valueOf(level) , itemId, itemName, address, refDeg, status});
+			 
+				 if(mbomLine.getChildrenCount() > 0) {
+					 for(MBOMLine chilLine : mbomLine.getChildrenBOMLine()) {
+						 addTableRow(level++, tableModel , chilLine);
+					 }
+				 }
+			} catch (TCException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		 }
+		
 	}
 
 	protected void clearMBOM(MBOM mbom) {

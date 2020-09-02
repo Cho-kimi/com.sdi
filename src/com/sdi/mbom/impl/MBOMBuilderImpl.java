@@ -4,7 +4,9 @@
 package com.sdi.mbom.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sdi.mbom.MBOM;
 import com.sdi.mbom.MBOMBuilder;
@@ -65,21 +67,35 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 				
 				preMBOM = new PreMBOMImpl(this, topMBOMLineName, topBOMLine, false);
 				
-				List<MBOMLine> phantomMBOMLines = makePhantomMBOMLines(relatedTopItemId);
+				//List<MBOMLine> phantomMBOMLines = 
+				Map<String,MBOMLine> phantomMBOMLineMap = new HashMap<String,MBOMLine>();
 				
-				preMBOM.getTopBOMLine().addChildBOMLines(phantomMBOMLines);
+				//preMBOM.getTopBOMLine().addChildBOMLines(phantomMBOMLines);
 				
+				MBOMLine topline = preMBOM.getTopBOMLine();
 				
 				AIFComponentContext[] childrenLines = topBOMLine.getChildren();
 				for(int i=0; i < childrenLines.length; i++ ) {
 					TCComponentBOMLine childLine = (TCComponentBOMLine)childrenLines[i].getComponent();
+					String childMBOMLineName = childLine.getItem().getStringProperty("object_name");  //속성명 확인필요
 					
-					String address = childLine.getStringProperty("MBOMAddress");
+					MBOMLine childMBOMLine = generateMBOMLine(childMBOMLineName, childLine);
 					
-					for( MBOMLine parentLine : phantomMBOMLines) {
-						if( parentLine.getName().startsWith(address)) {
-							parentLine.addChildBOMLine(generateMBOMLine("", childLine));
-						}						
+					String address = childLine.getStringProperty("m2_MbomAddress");
+					
+					if(address != null && address.length() > 0) {
+						
+						if(phantomMBOMLineMap.containsKey(address)) {
+							phantomMBOMLineMap.get(address).addChildBOMLine(childMBOMLine);
+						}else {
+							MBOMLine phantomMBOMLine = generateMBOMLine(address + relatedTopItemId);
+							phantomMBOMLineMap.put(address, phantomMBOMLine);
+							phantomMBOMLine.addChildBOMLine(childMBOMLine);
+							
+							//topline.addChildBOMLine(phantomMBOMLine);
+						}
+					}else {
+						topline.addChildBOMLine(childMBOMLine);
 					}
 					
 					//address에 따라 새로운 Phantom을 만들고 그 밑에 BOMLine 아이템을 Child로 붙인다.
@@ -98,29 +114,15 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 		//
 		return preMBOM;
 	}
-
-	private List<MBOMLine> makePhantomMBOMLines(String relatedTopItemId) {
-		// TODO Auto-generated method stub
-		//속성 값별로 MBOMLine을 만든다.
-		List<MBOMLine> bomLines = new ArrayList<MBOMLine>();
-		
-		//3개 속성을 가져와 For문을 돌면서 생성한다.
-		String phantomName = "AUTO";
-		
-		MBOMLine line = generateMBOMLine(phantomName + relatedTopItemId);
-		bomLines.add(line);	
-		
-		return bomLines;
-	}
-	
+	@Override
 	public MBOMLine generateMBOMLine(String name) {		
 		return generateMBOMLine(name, null, null, propNames);
 	}
-	
+	@Override
 	public MBOMLine generateMBOMLine(String name, TCComponentBOMLine source) {		
 		return generateMBOMLine(name, null, source, propNames);
 	}
-	
+	@Override
 	public MBOMLine generateMBOMLine(String name, TCComponentBOMLine target, TCComponentBOMLine source) {	
 		return generateMBOMLine(name, target, source, propNames);
 	}
@@ -132,6 +134,7 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 	 * @param refPropertyNames  , 원래의 BOMLine으로 부터 복사할 속성명 배열
 	 * @return
 	 */
+	@Override
 	public MBOMLine generateMBOMLine(String targetItemId, TCComponentBOMLine target, TCComponentBOMLine source, String[] refPropertyNames) {
 		
 		MBOMLine newMBOMLine = null;

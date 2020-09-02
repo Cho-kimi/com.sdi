@@ -20,6 +20,16 @@ public interface MBOMLine extends MBOMComponent {
 	void addChildBOMLines(List<MBOMLine> mbomLines);
 
 	void addChildBOMLine(MBOMLine generateMBOMLine);
+
+	TCComponentBOMLine getSourceBOMLine();
+
+	String[] getRefPropertyNames();
+
+	String getTargetItemId();
+
+	void setTargetItemId(String targetItemId);
+	
+	int getChildrenCount();
 	
 	
 }

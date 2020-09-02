@@ -105,14 +105,17 @@ public class MBOMLineImpl implements MBOMLine {
 		this.childrenList = childrenList;
 	}
 
+	@Override
 	public String getTargetItemId() {
 		return targetItemId;
 	}
 
+	@Override
 	public void setTargetItemId(String targetItemId) {
 		this.targetItemId = targetItemId;
 	}
 
+	@Override
 	public TCComponentBOMLine getSourceBOMLine() {
 		return sourceBOMLine;
 	}
@@ -121,12 +124,18 @@ public class MBOMLineImpl implements MBOMLine {
 		this.sourceBOMLine = sourceBOMLine;
 	}
 
+	@Override
 	public String[] getRefPropertyNames() {
 		return refPropertyNames;
 	}
 
 	public void setRefPropertyNames(String[] refPropertyNames) {
 		this.refPropertyNames = refPropertyNames;
+	}
+
+	@Override
+	public int getChildrenCount() {
+		return this.getChildrenBOMLine().size();
 	}
 	
 
