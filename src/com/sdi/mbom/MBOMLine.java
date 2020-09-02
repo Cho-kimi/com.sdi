@@ -1,21 +1,23 @@
 package com.sdi.mbom;
 
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 
 public interface MBOMLine extends MBOMComponent {
 
+	public static final String NEW_ITEM_ID = "NEED NEW ITEM ID";
 	
 	public MBOMComponent getBOMComponent();
 	
 	public TCComponentBOMLine getPermanentBOMLine();
 
-
-
 	public String getName();
+	
+	MBOMLine[] getChildren();
 
-	List<MBOMLine> getChildrenBOMLine();
+	List<MBOMLine> getChildrenList();
 
 	void addChildBOMLines(List<MBOMLine> mbomLines);
 
@@ -32,6 +34,9 @@ public interface MBOMLine extends MBOMComponent {
 	int getChildrenCount();
 	
 	List<Object> getProperties(String [] propNames);
+
+	void setMBOMChangeEventHandler(MBOMChangeEventHandler handler);
 	
+	ActionListener getDataChangeActionListener(String properyName);
 	
 }

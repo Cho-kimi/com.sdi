@@ -16,10 +16,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import com.sdi.mbom.MBOM;
+import com.sdi.mbom.MBOMChangeEvent;
+import com.sdi.mbom.MBOMChangeEventListener;
 import com.sdi.mbom.MBOMLine;
 import com.sdi.mbom.PreMBOM;
+import com.sdi.mbom.TitledMBOMLine;
 import com.teamcenter.rac.aif.AbstractAIFDialog;
 import com.teamcenter.rac.aif.InterfaceAIFOperationListener;
 import com.teamcenter.rac.kernel.TCComponent;
@@ -34,7 +38,7 @@ import com.teamcenter.rac.util.iTextField;
  * @author 
  *
  */
-public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListener, InterfaceAIFOperationListener {
+public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListener, InterfaceAIFOperationListener, MBOMChangeEventListener {
 	
 	/**
 	 * 
@@ -175,20 +179,43 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		JPanel tablePanel = new JPanel(new BorderLayout());
 		this.resultScrollPane = new JScrollPane();
 		
-		this.header = new String[] { "Lvl", "부품ID", "부품명", "MBOMAddress", "참조지정자", "처리결과" };
+		this.header = new String[] { "Lvl", "부품ID", "부품명", "수량", "찾기번호", "MBOMAddress", "참조지정자", "처리결과" };
 		this.tableModel = new DialogTableModel(this.header, 0) ;
 		
 		this.resultTable = new JTable(this.tableModel);
 		
+		DefaultTableCellRenderer cellCenterRenderer = new DefaultTableCellRenderer();
+		cellCenterRenderer.setHorizontalAlignment(JLabel.CENTER);
+		
+		DefaultTableCellRenderer cellRightRenderer = new DefaultTableCellRenderer();
+		cellRightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+		
+		
 		this.resultTable.getTableHeader().setBackground(Color.lightGray);
 		this.resultTable.getTableHeader().setBorder(BorderFactory.createRaisedBevelBorder());
 		
-		this.resultTable.getColumnModel().getColumn(0).setPreferredWidth(80);
-		this.resultTable.getColumnModel().getColumn(1).setPreferredWidth(200);
+		this.resultTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+		this.resultTable.getColumnModel().getColumn(1).setPreferredWidth(160);
 		this.resultTable.getColumnModel().getColumn(2).setPreferredWidth(200);
-		this.resultTable.getColumnModel().getColumn(3).setPreferredWidth(200);
-		this.resultTable.getColumnModel().getColumn(4).setPreferredWidth(200);
-		this.resultTable.getColumnModel().getColumn(5).setPreferredWidth(80);
+		this.resultTable.getColumnModel().getColumn(3).setPreferredWidth(50);
+		this.resultTable.getColumnModel().getColumn(4).setPreferredWidth(60);
+		
+		this.resultTable.getColumnModel().getColumn(5).setPreferredWidth(120);
+		this.resultTable.getColumnModel().getColumn(6).setPreferredWidth(200);
+		this.resultTable.getColumnModel().getColumn(7).setPreferredWidth(80);
+		
+		
+		this.resultTable.getColumnModel().getColumn(0).setCellRenderer(cellRightRenderer);
+		this.resultTable.getColumnModel().getColumn(1).setCellRenderer(cellCenterRenderer);
+		//this.resultTable.getColumnModel().getColumn(2).setCellRenderer(cellCenterRenderer); //use default
+		this.resultTable.getColumnModel().getColumn(3).setCellRenderer(cellRightRenderer);
+		this.resultTable.getColumnModel().getColumn(4).setCellRenderer(cellCenterRenderer);
+		this.resultTable.getColumnModel().getColumn(5).setCellRenderer(cellCenterRenderer);
+		this.resultTable.getColumnModel().getColumn(6).setCellRenderer(cellCenterRenderer);
+		this.resultTable.getColumnModel().getColumn(7).setCellRenderer(cellCenterRenderer);
+		
+		
+		
 		
 		this.resultTable.setAutoResizeMode(1);
 		this.resultScrollPane.getViewport().add(this.resultTable);
@@ -210,7 +237,10 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			addMBOM(mbom);
 		}
 		else if (obj.equals(this.createButton)){
-		  
+			if(mbom instanceof PreMBOM) {
+				PreMBOM preMbom = (PreMBOM)mbom;
+				preMbom.getOwningBuilder().buildBOM(preMbom);
+			}
 		}
 		else if (obj.equals(this.cancelButton)){
 		  setVisible(false);
@@ -259,7 +289,8 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	protected void updateSourceInfo(TCComponent sourceComp) {
 		
 		try {
-			String sourceInfo = sourceComp.getStringProperty("bl_item_item_id") + " / " + sourceComp.getStringProperty("bl_item_object_name");
+			//String sourceInfo = sourceComp.getStringProperty("bl_item_item_id") + " / " + sourceComp.getStringProperty("bl_item_object_name");
+			String sourceInfo = sourceComp.getProperty("bl_indented_title");
 			this.jlblSourceObjInfo.setText(sourceInfo);
 		}catch(Throwable t) {
 			t.printStackTrace();
@@ -271,19 +302,63 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 
 		updateSourceInfo(mbom.getSourceComponent());
 		
+		//tablemodel reset;
+		if(this.tableModel.getRowCount() > 0) {
+			this.tableModel = new DialogTableModel(this.header, 0) ;
+			this.resultTable.setModel(this.tableModel);
+		}
+		
 		if(mbom instanceof PreMBOM) {
 			 this.isPreMBOM = true;
 			 
 			 PreMBOM preMBOM = (PreMBOM)mbom;
 			 
 			 MBOMLine topLine = preMBOM.getTopBOMLine();
-			 addTableRow(0, tableModel, topLine);
-
+			 addTableRow(0, this.tableModel, topLine);
+			 
+			 //topId
+			 addTextFiledChangeListener(this.mBomTopId, topLine, "item_id" );
+			 
+			 for(MBOMLine mbomLine : preMBOM.getPhantomMBOMLines()) {
+				 
+				 TitledMBOMLine phantomLine = (TitledMBOMLine)mbomLine;
+				 String title = phantomLine.getTitleIdentity();
+				 if(title.equals("SMD")) {
+					 addTextFiledChangeListener(this.smdPhantomId, mbomLine, "item_id" );
+				 }else if(title.equals("AUTO")) {
+					 addTextFiledChangeListener(this.autoId, mbomLine, "item_id" );
+				 }else if(title.equals("MANUAL")) {
+					 addTextFiledChangeListener(this.manualId, mbomLine, "item_id" );
+				 }
+			 }
+			 
 		}else {
 			
 			//update 기존 M-BOM 정보 업데이트
 			
 		}
+		mbom.addMBOMChangeEventListener(this);
+		
+	}
+	
+	protected void addTextFiledChangeListener(iTextField textField, MBOMLine bomLine, String propertyName) {
+		
+		textField.addActionListener(bomLine.getDataChangeActionListener(propertyName));
+	}
+	
+	@Override
+	public void onMBOMDataChanged(MBOMChangeEvent event) {
+		
+//		if(event.getEventDatas() != null) {
+//			for(MBOMLine mbomline : event.getEventDatas()) {
+//				Object row = getTableModelMap(mbomline);
+//				//row data update
+//			}
+//		}else{
+//			loadMBOM( this.getMBOM());
+//		}
+		
+		loadMBOM( this.getMBOM());
 	}
 
 	private void addTableRow(int level, DialogTableModel tableModel, MBOMLine mbomLine) {
@@ -291,7 +366,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		 if(mbomLine != null) {
 			 
 			try {
-				 String []  propNames = new String[] {"bl_item_item_id", "bl_item_object_name" , "m2_MbomAddress" , "bl_ref_designator"};
+				 String []  propNames = new String[] {"bl_item_item_id", "bl_item_object_name", "bl_quantity", "bl_sequence_no" , "m2_MbomAddress" , "bl_ref_designator"};
 				
 				 List<Object> properties = mbomLine.getProperties(propNames);
 				 
@@ -306,7 +381,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 				 tableModel.addRow( properties.toArray() );
 			 
 				 if(mbomLine.getChildrenCount() > 0) {
-					 for(MBOMLine chilLine : mbomLine.getChildrenBOMLine()) {
+					 for(MBOMLine chilLine : mbomLine.getChildrenList()) {
 						 addTableRow(level+1, tableModel , chilLine);
 					 }
 				 }

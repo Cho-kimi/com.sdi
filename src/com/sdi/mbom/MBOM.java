@@ -3,22 +3,18 @@
  */
 package com.sdi.mbom;
 
-import java.util.List;
-
 import com.teamcenter.rac.kernel.TCComponent;
 
 /**
  * @author cspark
  *
  */
-public interface MBOM {
+public interface MBOM extends MBOMChangeEventHandler{
 	
 	public MBOMLine    getTopBOMLine();
 	
-	public List<MBOMLine> getChildBOMLine(MBOMLine parent);
-
-	public int getChildrenCount();
-
-	public TCComponent getSourceComponent(); 
+	public TCComponent getSourceComponent();
+	
+	public MBOMChangeEventHandler getMBOMChangeEventHandler();
 	
 }

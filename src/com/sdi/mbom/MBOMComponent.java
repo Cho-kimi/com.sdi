@@ -1,15 +1,11 @@
 package com.sdi.mbom;
 
-import com.teamcenter.rac.kernel.TCComponentItem;
-import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCComponent;
 
 public interface MBOMComponent {
 	
 	public boolean isPermanent();
-
 	
-	public TCComponentItem getPermanentItem();
+	public TCComponent getTCComponent();
 	
-	public TCComponentItemRevision getPermanentItemRevision();
-
 }
