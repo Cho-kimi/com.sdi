@@ -258,7 +258,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	protected void updateSourceInfo(TCComponent sourceComp) {
 		
 		try {
-			String sourceInfo = sourceComp.getObjectString();
+			String sourceInfo = sourceComp.getStringProperty("bl_item_item_id") + " / " + sourceComp.getStringProperty("bl_item_object_name");
 			this.jlblSourceObjInfo.setText(sourceInfo);
 		}catch(Throwable t) {
 			t.printStackTrace();
@@ -298,8 +298,8 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			 }
 			 
 			try {
-				 String itemId = bomline.getItem().getStringProperty("item_id");
-				 String itemName = bomline.getItem().getStringProperty("object_name");
+				 String itemId = bomline.getStringProperty("bl_item_item_id");
+				 String itemName = bomline.getStringProperty("bl_item_object_name");
 				 String address  = bomline.getStringProperty("m2_MbomAddress");;
 				 String refDeg = bomline.getStringProperty("bl_ref_designator");
 				 String status = "´ë±â";
@@ -307,8 +307,9 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 				 tableModel.addRow(new String[] {String.valueOf(level) , itemId, itemName, address, refDeg, status});
 			 
 				 if(mbomLine.getChildrenCount() > 0) {
+					 level++;
 					 for(MBOMLine chilLine : mbomLine.getChildrenBOMLine()) {
-						 addTableRow(level++, tableModel , chilLine);
+						 addTableRow(level, tableModel , chilLine);
 					 }
 				 }
 			} catch (TCException e) {
