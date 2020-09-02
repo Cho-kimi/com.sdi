@@ -90,8 +90,8 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 						MBOMLine childMBOMLine = generateMBOMLine(childLine, false);
 						childMBOMLine.setMBOMChangeEventHandler(preMBOM);
 						
-						//String address = childLine.getStringProperty("m2_MbomAddress");
-						String address = childLine.getStringProperty("bl_usage_address");
+						String address = childLine.getStringProperty("m2_MbomAddress");
+						//String address = childLine.getStringProperty("bl_usage_address");
 						
 						//생산 구분자가 있는 경우에는 Phantom BOMLine을 생성하여 하위에 붙이기 위해 Phantom BOMLine을 가져온다.(최초에는 생성)
 						if(address != null && address.length() > 0) {
