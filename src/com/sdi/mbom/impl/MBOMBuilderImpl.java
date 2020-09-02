@@ -1,0 +1,165 @@
+/**
+ * 
+ */
+package com.sdi.mbom.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sdi.mbom.MBOM;
+import com.sdi.mbom.MBOMBuilder;
+import com.sdi.mbom.MBOMLine;
+import com.sdi.mbom.MBOMManager;
+import com.sdi.mbom.PreMBOM;
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+
+/**
+ * @author cspark
+ *
+ */
+public class MBOMBuilderImpl implements MBOMBuilder {
+	
+	
+	private static String [] propNames = new String[] {"Reference Degignator"};
+
+	public MBOMBuilderImpl(MBOMManager _instance) {
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public PreMBOM buildPreMBOM(InterfaceAIFComponent targetComp) {
+		
+		PreMBOM preMBOM = null;
+		
+		if(targetComp != null) {
+			
+			TCComponentBOMLine topBOMLine = null;
+			
+			try {
+			
+			if(targetComp instanceof TCComponentBOMLine) {
+				topBOMLine =(TCComponentBOMLine)targetComp;
+				
+			}else if(targetComp  instanceof TCComponentItem){
+				// TODO targetComp으로부터 최종 Release된 아이템으로 부터 BOMWindow를 받는다.
+				// TODO  Release된 아이템이 없을 경우에는 최신 Working Revison을 받는다.	
+				
+				// TODO BOM Line을 생성하여 받는다
+				// TODO topBOMLine = bomWindow.getTOP();
+			}else if(targetComp  instanceof TCComponentItemRevision){
+				// TODO targetComp으로부터 아이템리비전으로  BOMWindow를 받는다.
+				// TODO BOM Line을 생성하여 받는다
+				// TODO topBOMLine = bomWindow.getTOP();
+			}
+			
+
+			
+			if(topBOMLine != null && topBOMLine.getChildrenCount() > 0) {
+				
+				String topMBOMLineName = topBOMLine.getItem().getStringProperty("object_name");  //속성명 확인필요
+				String relatedTopItemId = topBOMLine.getItem().getStringProperty("item_id");  //속성명 확인필요
+				
+				preMBOM = new PreMBOMImpl(this, topMBOMLineName, topBOMLine, false);
+				
+				List<MBOMLine> phantomMBOMLines = makePhantomMBOMLines(relatedTopItemId);
+				
+				preMBOM.getTopBOMLine().addChildBOMLines(phantomMBOMLines);
+				
+				
+				AIFComponentContext[] childrenLines = topBOMLine.getChildren();
+				for(int i=0; i < childrenLines.length; i++ ) {
+					TCComponentBOMLine childLine = (TCComponentBOMLine)childrenLines[i].getComponent();
+					
+					String address = childLine.getStringProperty("MBOMAddress");
+					
+					for( MBOMLine parentLine : phantomMBOMLines) {
+						if( parentLine.getName().startsWith(address)) {
+							parentLine.addChildBOMLine(generateMBOMLine("", childLine));
+						}						
+					}
+					
+					//address에 따라 새로운 Phantom을 만들고 그 밑에 BOMLine 아이템을 Child로 붙인다.
+					
+				}
+				
+			}
+			
+			}catch(Throwable t)
+			{
+				t.printStackTrace();
+			}
+		}
+		
+		
+		//
+		return preMBOM;
+	}
+
+	private List<MBOMLine> makePhantomMBOMLines(String relatedTopItemId) {
+		// TODO Auto-generated method stub
+		//속성 값별로 MBOMLine을 만든다.
+		List<MBOMLine> bomLines = new ArrayList<MBOMLine>();
+		
+		//3개 속성을 가져와 For문을 돌면서 생성한다.
+		String phantomName = "AUTO";
+		
+		MBOMLine line = generateMBOMLine(phantomName + relatedTopItemId);
+		bomLines.add(line);	
+		
+		return bomLines;
+	}
+	
+	public MBOMLine generateMBOMLine(String name) {		
+		return generateMBOMLine(name, null, null, propNames);
+	}
+	
+	public MBOMLine generateMBOMLine(String name, TCComponentBOMLine source) {		
+		return generateMBOMLine(name, null, source, propNames);
+	}
+	
+	public MBOMLine generateMBOMLine(String name, TCComponentBOMLine target, TCComponentBOMLine source) {	
+		return generateMBOMLine(name, target, source, propNames);
+	}
+	
+	/**
+	 * 
+	 * @param name                새로이 만들어질 BOMLine의 이름
+	 * @param comp                원래의 BOMLine 아이템
+	 * @param refPropertyNames  , 원래의 BOMLine으로 부터 복사할 속성명 배열
+	 * @return
+	 */
+	public MBOMLine generateMBOMLine(String targetItemId, TCComponentBOMLine target, TCComponentBOMLine source, String[] refPropertyNames) {
+		
+		MBOMLine newMBOMLine = null;
+		
+		if(target == null) {
+			newMBOMLine = new MBOMLineImpl(source, targetItemId, refPropertyNames);
+		}else {
+			newMBOMLine = new MBOMLineImpl(targetItemId, target, refPropertyNames);
+		}
+		
+		return newMBOMLine;
+	}
+	
+
+	@Override
+	public void updateBOM(MBOM mbom) {
+		// TODO Auto-generated method stub
+		//MBOM을 구성하고 이전의 MBOM 구성을 제거한후 다시 구성한다.
+		//이미 생성된 MBOM이 있을 경우 업데이트 한다.
+	}
+
+	@Override
+	public void buildBOM(PreMBOM mbom) {
+		// TODO Auto-generated method stub
+
+		//화면에 임시로 만들어진 MBOM을 사용자가 만들기 명령을 클릭하면 실제로 아이템을 생성하고 BOM을 구성한다.
+		// 이미 만드어진 아이템이 아닐 경우 아이템을 새로 생성한다.
+		// 아이템이 만들어진 경우 새로 BOMLine만 생성하고 속성만 업데이트 한다.
+	}
+
+}
