@@ -102,6 +102,12 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 					
 				}
 				
+				if(!phantomMBOMLineMap.isEmpty()) {
+					for(MBOMLine phantomLine :  phantomMBOMLineMap.values()) {
+						topline.addChildBOMLine(phantomLine);
+					}
+				}
+				
 			}
 			
 			}catch(Throwable t)
@@ -123,8 +129,8 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 		return generateMBOMLine(name, null, source, propNames);
 	}
 	@Override
-	public MBOMLine generateMBOMLine(String name, TCComponentBOMLine target, TCComponentBOMLine source) {	
-		return generateMBOMLine(name, target, source, propNames);
+	public MBOMLine generateMBOMLine(String name, TCComponentBOMLine permanent, TCComponentBOMLine source) {	
+		return generateMBOMLine(name, permanent, source, propNames);
 	}
 	
 	/**
@@ -135,14 +141,14 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 	 * @return
 	 */
 	@Override
-	public MBOMLine generateMBOMLine(String targetItemId, TCComponentBOMLine target, TCComponentBOMLine source, String[] refPropertyNames) {
+	public MBOMLine generateMBOMLine(String newObjectName, TCComponentBOMLine permanent, TCComponentBOMLine source, String[] refPropertyNames) {
 		
 		MBOMLine newMBOMLine = null;
 		
-		if(target == null) {
-			newMBOMLine = new MBOMLineImpl(source, targetItemId, refPropertyNames);
+		if(permanent == null) {
+			newMBOMLine = new MBOMLineImpl(source, newObjectName, refPropertyNames);
 		}else {
-			newMBOMLine = new MBOMLineImpl(targetItemId, target, refPropertyNames);
+			newMBOMLine = new MBOMLineImpl(newObjectName, permanent, refPropertyNames);
 		}
 		
 		return newMBOMLine;

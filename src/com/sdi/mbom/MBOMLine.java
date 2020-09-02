@@ -31,5 +31,7 @@ public interface MBOMLine extends MBOMComponent {
 	
 	int getChildrenCount();
 	
+	List<Object> getProperties(String [] propNames);
+	
 	
 }

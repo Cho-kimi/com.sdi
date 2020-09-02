@@ -8,6 +8,7 @@ import com.sdi.mbom.MBOMLine;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentItem;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCException;
 
 public class MBOMLineImpl implements MBOMLine {
 	
@@ -24,6 +25,8 @@ public class MBOMLineImpl implements MBOMLine {
 
 	private String[] refPropertyNames;
 
+	private String objectName;
+
 
 	MBOMLineImpl(String permanatItemId, TCComponentBOMLine permanentBOMLine,  String[] refPropertyNames){
 		if(permanentBOMLine == null) {
@@ -37,11 +40,21 @@ public class MBOMLineImpl implements MBOMLine {
 		this.isPermanent = true;
 	}
 	
-	MBOMLineImpl(TCComponentBOMLine sourceBOMLine, String targetItemId,  String[] refPropertyNames){
+	MBOMLineImpl(TCComponentBOMLine sourceBOMLine, String newObjectName,  String[] refPropertyNames){
 		
 		this.setTargetItemId(targetItemId);
 		this.setSourceBOMLine(sourceBOMLine);
 		this.setRefPropertyNames(refPropertyNames);
+		
+		if( (newObjectName == null || newObjectName.length() == 0) && sourceBOMLine != null ) {
+			try {
+				newObjectName = sourceBOMLine.getItem().getStringProperty("object_name");
+			} catch (TCException e) {
+				newObjectName = "";
+				e.printStackTrace();
+			}
+		}
+		this.objectName = newObjectName;
 		
 		this.isPermanent = false;
 	}
@@ -88,8 +101,7 @@ public class MBOMLineImpl implements MBOMLine {
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.objectName;
 	}
 	
 	@Override
@@ -136,6 +148,38 @@ public class MBOMLineImpl implements MBOMLine {
 	@Override
 	public int getChildrenCount() {
 		return this.getChildrenBOMLine().size();
+	}
+
+	@Override
+	public List<Object> getProperties(String[] propNames) {
+		
+		TCComponentBOMLine bomLine = null;
+		List<Object> propValues = new ArrayList<Object>();
+		
+		if(propNames == null || propNames.length <= 0) {
+			return propValues ;
+		}
+		
+		bomLine = (this.isPermanent)? this.getPermanentBOMLine(): this.getSourceBOMLine();
+		
+		for(String propName : propNames) {
+			
+			String propValue = "";
+			try {
+			if(propName.equals("object_name") || propName.equals("bl_item_object_name")) {
+				propValue = getName();
+			}else if(propName.equals("item_id") || propName.equals("bl_item_item_id")) {				
+				propValue = bomLine == null? getTargetItemId() : bomLine.getItem().getStringProperty("item_id");
+			}else {
+				propValue = bomLine.getProperty(propName);
+			}
+			}catch(Throwable t) {
+				t.printStackTrace();
+			}
+			propValues.add(propValue);
+		}
+		
+		return propValues;
 	}
 	
 

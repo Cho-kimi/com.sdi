@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -287,34 +288,30 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 
 	private void addTableRow(int level, DialogTableModel tableModel, MBOMLine mbomLine) {
 		
-		TCComponentBOMLine bomline = null;
-		
 		 if(mbomLine != null) {
 			 
-			 if(mbomLine.isPermanent()) {
-				 bomline= mbomLine.getPermanentBOMLine();
-			 }else {
-				 bomline =mbomLine.getSourceBOMLine();
-			 }
-			 
 			try {
-				 String itemId = bomline.getStringProperty("bl_item_item_id");
-				 String itemName = bomline.getStringProperty("bl_item_object_name");
-				 String address  = bomline.getStringProperty("m2_MbomAddress");;
-				 String refDeg = bomline.getStringProperty("bl_ref_designator");
-				 String status = "대기";
+				 String []  propNames = new String[] {"bl_item_item_id", "bl_item_object_name" , "m2_MbomAddress" , "bl_ref_designator"};
+				
+				 List<Object> properties = mbomLine.getProperties(propNames);
 				 
-				 tableModel.addRow(new String[] {String.valueOf(level) , itemId, itemName, address, refDeg, status});
+//				 String itemId = bomline.getStringProperty("bl_item_item_id");
+//				 String itemName = bomline.getStringProperty("bl_item_object_name");
+//				 String address  = bomline.getStringProperty("m2_MbomAddress");;
+//				 String refDeg = bomline.getStringProperty("bl_ref_designator");
+//				 String status = "대기";
+				 properties.add(0, String.valueOf(level));
+				 properties.add("대기");
+			 
+				 tableModel.addRow( properties.toArray() );
 			 
 				 if(mbomLine.getChildrenCount() > 0) {
-					 level++;
 					 for(MBOMLine chilLine : mbomLine.getChildrenBOMLine()) {
-						 addTableRow(level, tableModel , chilLine);
+						 addTableRow(level+1, tableModel , chilLine);
 					 }
 				 }
-			} catch (TCException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Throwable t) {
+				t.printStackTrace();
 			}
 		
 		 }

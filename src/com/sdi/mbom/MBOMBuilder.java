@@ -22,16 +22,17 @@ public interface MBOMBuilder {
 
 	MBOMLine generateMBOMLine(String name, TCComponentBOMLine source);
 
-	MBOMLine generateMBOMLine(String name, TCComponentBOMLine target, TCComponentBOMLine source);
+	MBOMLine generateMBOMLine(String name, TCComponentBOMLine permanent, TCComponentBOMLine source);
 
 	/**
 	 * 
-	 * @param name                새로이 만들어질 BOMLine의 이름
-	 * @param comp                원래의 BOMLine 아이템
+	 * @param newObjectName       새로이 만들어질 BOMLine의 이름
+	 * @param permanent           이미 만들어져있는 BOMLine 컴포넌트
+	 * @param source              원래의 BOMLine 컴포넌트
 	 * @param refPropertyNames  , 원래의 BOMLine으로 부터 복사할 속성명 배열
 	 * @return
 	 */
-	MBOMLine generateMBOMLine(String targetItemId, TCComponentBOMLine target, TCComponentBOMLine source,
+	MBOMLine generateMBOMLine(String newObjectName, TCComponentBOMLine permanent, TCComponentBOMLine source,
 			String[] refPropertyNames);
 	
 	
