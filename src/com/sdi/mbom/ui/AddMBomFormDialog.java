@@ -247,6 +247,8 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			 * if(mbom instanceof PreMBOM) { PreMBOM preMbom = (PreMBOM)mbom;
 			 * preMbom.getOwningBuilder().buildBOM(preMbom); }
 			 */
+			
+			// 입력창 확인
 			String sTopId = mBomTopId.getText();
 			String sPhantomId = smdPhantomId.getText();
 			if(sTopId == null || sTopId.length() == 0 ) {
@@ -265,6 +267,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			
 			TCSession TCSession = (TCSession)AIFUtility.getSessionManager().getDefaultSession();
 			
+			// top, phantom item 생성
 			TCComponentItem topItem = createItem(TCSession, "M2_MBomTop", sTopId, "M-BOM Top");
 			TCComponentItem phantomItem = createItem(TCSession, "M2_MBomPhantom", sPhantomId, "SMD Phantom");
 			
@@ -277,8 +280,10 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 				TCComponentBOMWindowType bomWindowType = (TCComponentBOMWindowType)TCSession.getTypeComponent("BOMWindow");
 				this.bomWindow = bomWindowType.create(revisionRule);
 				
+				// top bomline 생성
 				bomTopLine = this.bomWindow.setWindowTopLine(null, topItem.getLatestItemRevision(), null, null);
 				
+				// m2_MbomAddress 값이 없는 아이템 bomline 생성
 				String itemId = "";
 				String mbomAdress = "";
 				String designator = "";
@@ -287,13 +292,16 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 					itemId = this.tableModel.getValueAt(i, 1).toString();
 					mbomAdress = this.tableModel.getValueAt(i, 5).toString();
 					designator = this.tableModel.getValueAt(i, 6).toString();
-					if(mbomAdress.length() == 0) {
+					if(mbomAdress == null || mbomAdress.length() == 0) {
 						if(itemId.equals("NEED NEW ITEM ID")) {
 							this.tableModel.setValueAt("완료", i, 7);
 						}else {
+							// Bomline 추가
 							childItem = findItem(TCSession, "Item", itemId);
 							bomChildLine = bomTopLine.add( null, childItem.getLatestItemRevision(), null, false );
+							// Property 값 입력
 							bomChildLine.getTCProperty("bl_ref_designator").setStringValue(designator);
+							// 완료처리
 							this.tableModel.setValueAt("완료", i, 7);
 						}
 					}
@@ -303,6 +311,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 				
 				this.bomWindow.save();
 				
+				// m2_MbomAddress 값이 'SMD'아이템 bomline 생성
 				bomPhantomLine = this.bomWindow.setWindowTopLine(null, phantomItem.getLatestItemRevision(), null, null);
 				
 				for(int i=0; i<this.tableModel.getRowCount(); i++) { 
@@ -311,10 +320,13 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 					designator = this.tableModel.getValueAt(i, 6).toString();
 					if(mbomAdress != null && mbomAdress.length() > 0) { 
 						if(mbomAdress.equals("SMD")) {
+							// Bomline 추가
 							childItem = findItem(TCSession, "Item", itemId);
 							bomChildLine = bomPhantomLine.add( null, childItem.getLatestItemRevision(), null, false );
+							// Property 값 입력
 							bomChildLine.getTCProperty("m2_MbomAddress").setStringValue("SMD");
 							bomChildLine.getTCProperty("bl_ref_designator").setStringValue(designator);
+							// 완료처리
 							this.tableModel.setValueAt("완료", i, 7);
 						}
 					}
