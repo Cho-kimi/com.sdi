@@ -12,7 +12,6 @@ import com.sdi.mbom.MBOMChangeEventHandler;
 import com.sdi.mbom.MBOMChangeEventListener;
 import com.sdi.mbom.MBOMLine;
 import com.sdi.mbom.PreMBOM;
-import com.sdi.mbom.TitledMBOMLine;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 
@@ -38,7 +37,7 @@ public class PreMBOMImpl implements PreMBOM{
 		this.owningBuilder = owningBuilder;
 		this.sourceComponent = bomline;
 		//최상위 BOMLine을 생성한다.(아직 BOM이 생성된 것은 아님)
-		this.topBOMLine = owningBuilder.generateMBOMLine(bomline, MBOMLine.NEW_ITEM_ID );
+		this.topBOMLine = owningBuilder.getHelper().generateMBOMLine(bomline, MBOMLine.NEW_ITEM_ID );
 		this.topBOMLine.setMBOMChangeEventHandler(this);
 	}
 

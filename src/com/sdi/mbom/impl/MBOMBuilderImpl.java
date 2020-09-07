@@ -3,15 +3,14 @@
  */
 package com.sdi.mbom.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.sdi.mbom.MBOM;
 import com.sdi.mbom.MBOMBuilder;
 import com.sdi.mbom.MBOMChangeEvent;
 import com.sdi.mbom.MBOMChangeEventHandler;
+import com.sdi.mbom.MBOMConstants;
+import com.sdi.mbom.MBOMHelper;
 import com.sdi.mbom.MBOMLine;
 import com.sdi.mbom.MBOMManager;
 import com.sdi.mbom.NotSupportedTypeException;
@@ -30,10 +29,11 @@ import com.teamcenter.rac.kernel.TCComponentItemRevision;
 public class MBOMBuilderImpl implements MBOMBuilder {
 	
 	
-	private static String [] propNames = new String[] {"Reference Degignator"};
-
-	public MBOMBuilderImpl(MBOMManager _instance) {
-		// TODO Auto-generated constructor stub
+	private MBOMManager manager;
+	
+	
+	public MBOMBuilderImpl(MBOMManager manager) {
+		this.manager = manager;
 	}
 
 	@Override
@@ -51,16 +51,8 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 					topBOMLine =(TCComponentBOMLine)targetComp;
 					
 				}else if(targetComp  instanceof TCComponentItem){
-					// TODO targetComp으로부터 최종 Release된 아이템으로 부터 BOMWindow를 받는다.
-					// TODO  Release된 아이템이 없을 경우에는 최신 Working Revison을 받는다.	
-					
-					// TODO BOM Line을 생성하여 받는다
-					// TODO topBOMLine = bomWindow.getTOP();
 					throw new NotSupportedTypeException("MBOM 생성시 Item 유형은 지원하지 않습니다. BOMLine을 선택하여 주십시요");
 				}else if(targetComp  instanceof TCComponentItemRevision){
-					// TODO targetComp으로부터 아이템리비전으로  BOMWindow를 받는다.
-					// TODO BOM Line을 생성하여 받는다
-					// TODO topBOMLine = bomWindow.getTOP();
 					throw new NotSupportedTypeException("MBOM 생성시 Item Revision 유형은 지원하지 않습니다. BOMLine을 선택하여 주십시요");
 				}else {
 					throw new NotSupportedTypeException("MBOM 생성을 지원하지 않는 유형이 선택되었습니다. BOMLine을 선택하여 주십시요");
@@ -73,8 +65,8 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 						topBOMLine.unpack();
 					}
 					
-					String topMBOMLineName  = topBOMLine.getProperty("bl_item_object_name");  
-					String relatedTopItemId = topBOMLine.getProperty("bl_item_item_id");  
+					String topMBOMLineName  = topBOMLine.getProperty(MBOMConstants.PROP_BOMLINE_OBJECT_NAME);  
+					String relatedTopItemId = topBOMLine.getProperty(MBOMConstants.PROP_BOMLINE_ITEM_ID);  
 					
 					preMBOM = new PreMBOMImpl(this, topMBOMLineName, topBOMLine, false);
 					
@@ -87,11 +79,10 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 					for(int i=0; i < childrenLines.length; i++ ) {
 						TCComponentBOMLine childLine = (TCComponentBOMLine)childrenLines[i].getComponent();
 						
-						MBOMLine childMBOMLine = generateMBOMLine(childLine, false);
+						MBOMLine childMBOMLine = getHelper().generateMBOMLine(childLine, false);
 						childMBOMLine.setMBOMChangeEventHandler(preMBOM);
 						
-						String address = childLine.getStringProperty("m2_MbomAddress");
-						//String address = childLine.getStringProperty("bl_usage_address");
+						String address = childLine.getStringProperty(MBOMConstants.PROP_BOMLINE_MBOM_ADDRESS);
 						
 						//생산 구분자가 있는 경우에는 Phantom BOMLine을 생성하여 하위에 붙이기 위해 Phantom BOMLine을 가져온다.(최초에는 생성)
 						if(address != null && address.length() > 0) {
@@ -129,7 +120,7 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 	 */
 	private MBOMLine findPhantomChildBOMLine(List<MBOMLine> phantomMBOMLines, String phantomTitle, String lineSuffix, MBOMChangeEventHandler handler) {
 		
-		String phantomLineName = generateMBOMItemName(phantomTitle, lineSuffix);
+		String phantomLineName = getHelper().generateMBOMItemName(phantomTitle, lineSuffix);
 		
 		for(MBOMLine phantomMBOMLine : phantomMBOMLines) {
 			if(phantomMBOMLine.getName().equals(phantomLineName)) {
@@ -138,7 +129,7 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 		}
 		
 		//찾지 못했으면 MBOMLine을 생성하고 리스트에 추가한다.
-		TitledMBOMLine phantomMBOMLine = generateTitledMBOMLine(phantomTitle, phantomLineName);
+		TitledMBOMLine phantomMBOMLine = getHelper().generateTitledMBOMLine(phantomTitle, phantomLineName);
 		phantomMBOMLine.setMBOMChangeEventHandler(handler);
 
 		//index를 맞춰야 할경우 어떻게 가져올지는 고민해야할 문제 (Sorting의 기준 문제)
@@ -177,48 +168,14 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 				handler.fireMBOMChangeEvent(new MBOMChangeEvent("CREATED"));
 			}
 		}
+	}
+
+	@Override
+	public MBOMHelper getHelper() {
+		return this.manager.getHelper();
 	}	
 	
-	@Override
-	public String generateMBOMItemName(String newName, String suffix) {
-		if(suffix == null) return newName;
-		return String.join("-", newName, suffix);
-	}
-	
-	public TitledMBOMLine generateTitledMBOMLine(String title, String newObjectName) {		
-		return new TitledMBOMLineImpl(title, newObjectName);
-	}
-	
-	@Override
-	public MBOMLine generateMBOMLine(TCComponentBOMLine permanent) {	
-		return new MBOMLineImpl(permanent);
-	}
-		
-	@Override
-	public MBOMLine generateMBOMLine(TCComponentBOMLine bomline, boolean isPermanent ) {		
-		return generateMBOMLine(bomline, null, null, propNames);
-	}
-	
 
-	@Override
-	public MBOMLine generateMBOMLine(String newObjectName) {		
-		return new MBOMLineImpl(newObjectName);
-	}
-
-	@Override
-	public MBOMLine generateMBOMLine(String newObjectName, String newItemId) {		
-		return new MBOMLineImpl(newObjectName, newItemId);
-	}
-
-	@Override
-	public MBOMLine generateMBOMLine(TCComponentBOMLine sourceBomline, String newItemId) {
-		return generateMBOMLine(sourceBomline, null, newItemId, propNames);
-	}
-
-	@Override
-	public MBOMLine generateMBOMLine(TCComponentBOMLine sourceBomline, String newObjectName, String newItemId, String[] refPropertyNames) {
-		return new MBOMLineImpl(sourceBomline, false, newObjectName, newItemId, refPropertyNames);
-	}
 
 
 }

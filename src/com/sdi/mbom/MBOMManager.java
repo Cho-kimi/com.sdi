@@ -4,6 +4,7 @@
 package com.sdi.mbom;
 
 import com.sdi.mbom.impl.MBOMBuilderImpl;
+import com.sdi.mbom.impl.MBOMHelperImpl;
 
 /**
  * @author cspark
@@ -34,6 +35,12 @@ public class MBOMManager {
 	protected MBOMBuilder _getBuilder() {
 	
 		return new MBOMBuilderImpl(_instance);
+		
+	}
+	
+	public MBOMHelper getHelper() {
+		
+		return MBOMHelperImpl.getHelper();
 		
 	}
 

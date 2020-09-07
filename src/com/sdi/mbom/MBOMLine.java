@@ -4,6 +4,7 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.util.iTextField;
 
 public interface MBOMLine extends MBOMComponent {
 
@@ -37,6 +38,6 @@ public interface MBOMLine extends MBOMComponent {
 
 	void setMBOMChangeEventHandler(MBOMChangeEventHandler handler);
 	
-	ActionListener getDataChangeActionListener(String properyName);
+	ActionListener getDataChangeActionListener(PropertyUIProvider propertyProvider, String properyName);
 	
 }

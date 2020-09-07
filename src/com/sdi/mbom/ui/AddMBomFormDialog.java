@@ -19,13 +19,18 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import com.sdi.common.TCUtils;
+import com.sdi.mbom.InvalidMBOMCreationException;
 import com.sdi.mbom.MBOM;
 import com.sdi.mbom.MBOMChangeEvent;
 import com.sdi.mbom.MBOMChangeEventListener;
+import com.sdi.mbom.MBOMConstants;
 import com.sdi.mbom.MBOMLine;
 import com.sdi.mbom.PreMBOM;
 import com.sdi.mbom.TitledMBOMLine;
+import com.teamcenter.rac.aif.AbstractAIFApplication;
 import com.teamcenter.rac.aif.AbstractAIFDialog;
+import com.teamcenter.rac.aif.AbstractAIFOperation;
 import com.teamcenter.rac.aif.InterfaceAIFOperationListener;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
@@ -33,9 +38,7 @@ import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentBOMWindow;
 import com.teamcenter.rac.kernel.TCComponentBOMWindowType;
 import com.teamcenter.rac.kernel.TCComponentItem;
-import com.teamcenter.rac.kernel.TCComponentItemType;
 import com.teamcenter.rac.kernel.TCComponentRevisionRule;
-import com.teamcenter.rac.kernel.TCComponentRevisionRuleType;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.util.MessageBox;
@@ -58,10 +61,10 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	private JPanel contentPane;
 	private JButton createButton;
 	private JButton cancelButton;
-	private iTextField mBomTopId;
-	private iTextField smdPhantomId;
-	private iTextField autoId;
-	private iTextField manualId;
+	private PropertyProvideField mBomTopId;
+	private PropertyProvideField smdPhantomId;
+	private PropertyProvideField autoId;
+	private PropertyProvideField manualId;
 	
 	private JLabel  jlblSourceObjInfo;
 	
@@ -74,7 +77,6 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 
 	private boolean isPreMBOM;
 	
-	private TCComponentBOMWindow bomWindow;
 	protected Window parent;
 	
 	public AddMBomFormDialog(Frame frame)
@@ -155,10 +157,10 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		JPanel dataPanel = new JPanel(new PropertyLayout(5,5));
 		dataPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		
-		this.mBomTopId = new iTextField(15, true);
-		this.smdPhantomId = new iTextField(15, true);
-		this.autoId = new iTextField(15, false);
-		this.manualId = new iTextField(15, false);
+		this.mBomTopId = new PropertyProvideField(15, true);
+		this.smdPhantomId = new PropertyProvideField(15, true);
+		this.autoId = new PropertyProvideField(15, false);
+		this.manualId = new PropertyProvideField(15, false);
 		
 		dataPanel.setOpaque(false);
 		JLabel  jlblTopID = new JLabel("M-BOM TOP ID : ");
@@ -243,64 +245,71 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		Object obj = event.getSource();
 		
 		if (obj.equals(this.createButton)){
+			
+			
+			
+			PreMBOM preMBOM = (PreMBOM)getMBOM();
 			/*
 			 * if(mbom instanceof PreMBOM) { PreMBOM preMbom = (PreMBOM)mbom;
-			 * preMbom.getOwningBuilder().buildBOM(preMbom); }
+			 * preMbom.getOwningBuilder().buildBOM(preMbom); }6
 			 */
+			try {
+				validateCreateMBOM(preMBOM);
+			}catch(InvalidMBOMCreationException ivex) {
+				
+				MessageBox.post(this.parent, ivex.getMessage(), "경고-생성 데이터 검증 오류", MessageBox.WARNING);
+				return;
+			}
 			
-			// 입력창 확인
 			String sTopId = mBomTopId.getText();
 			String sPhantomId = smdPhantomId.getText();
-			if(sTopId == null || sTopId.length() == 0 ) {
-				MessageBox.post(this.parent, "M-BOM TOP ID 값이 입력되지 않았습니다.", "경고", 4);
-				return;
-			}
-			if(sPhantomId == null || sPhantomId.length() == 0) {
-				MessageBox.post(this.parent, "SMD Phantom ID 값이 입력되지 않았습니다.", "경고", 4);
-				return;
-			}
-			if(sTopId.equals(sPhantomId)) {
-				MessageBox.post(this.parent, "M-BOM TOP ID 값과 SMD Phantom ID 값이 동일합니다.", "경고", 4);
-				return;
-			}
 			
 			
-			TCSession TCSession = (TCSession)AIFUtility.getSessionManager().getDefaultSession();
-			
-			// top, phantom item 생성
-			TCComponentItem topItem = createItem(TCSession, "M2_MBomTop", sTopId, "M-BOM Top");
-			TCComponentItem phantomItem = createItem(TCSession, "M2_MBomPhantom", sPhantomId, "SMD Phantom");
-			
-			TCComponentBOMLine bomTopLine = null;
-			TCComponentBOMLine bomPhantomLine = null;
-			TCComponentBOMLine bomChildLine = null;
 			try {
-				TCComponentRevisionRuleType revisionRuleType = (TCComponentRevisionRuleType)TCSession.getTypeComponent("RevisionRule");
-				TCComponentRevisionRule revisionRule = revisionRuleType.getDefaultRule();
-				TCComponentBOMWindowType bomWindowType = (TCComponentBOMWindowType)TCSession.getTypeComponent("BOMWindow");
-				this.bomWindow = bomWindowType.create(revisionRule);
+				
+				TCSession tcSession = (TCSession)AIFUtility.getSessionManager().getDefaultSession();
+				
+				// top, phantom item 생성
+				MBOMLine topLine = preMBOM.getTopBOMLine();
+				String topObjectName = topLine.getName();
+				
+				TCComponentItem topItem = TCUtils.createItem(tcSession, MBOMConstants.TYPE_MBOM_TOP_ITEM , sTopId, topObjectName);			
+				TCComponentItem phantomItem = TCUtils.createItem(tcSession, MBOMConstants.TYPE_MBOM_PHANTOM_ITEM, sPhantomId, "SMD Phantom");
+				
+				TCComponentBOMLine sourceTopLine =  topLine.getSourceBOMLine();
+				TCComponentBOMWindow sourceBOMWindow = sourceTopLine.getCachedWindow();
+				
+				TCComponentRevisionRule revisionRule = TCUtils.getRevisionRule(tcSession, sourceBOMWindow );
+				TCComponentBOMWindowType bomWindowType = (TCComponentBOMWindowType)TCUtils.getTypeComponent(tcSession, MBOMConstants.TYPE_BOM_WINDOW, sourceBOMWindow); 
+				
+				TCComponentBOMWindow bomWindow = bomWindowType.create(revisionRule);
+				
+				TCComponentBOMLine bomTopLine = null;
+				TCComponentBOMLine bomPhantomLine = null;
+				TCComponentBOMLine bomChildLine = null;
 				
 				// top bomline 생성
-				bomTopLine = this.bomWindow.setWindowTopLine(null, topItem.getLatestItemRevision(), null, null);
+				bomTopLine = bomWindow.setWindowTopLine(null, topItem.getLatestItemRevision(), null, null);
 				
 				// m2_MbomAddress 값이 없는 아이템 bomline 생성
 				String itemId = "";
 				String mbomAdress = "";
 				String designator = "";
+				
 				TCComponentItem childItem = null;
 				for(int i=0; i<this.tableModel.getRowCount(); i++) {
 					itemId = this.tableModel.getValueAt(i, 1).toString();
 					mbomAdress = this.tableModel.getValueAt(i, 5).toString();
 					designator = this.tableModel.getValueAt(i, 6).toString();
 					if(mbomAdress == null || mbomAdress.length() == 0) {
-						if(itemId.equals("NEED NEW ITEM ID")) {
+						if(itemId.equals(MBOMLine.NEW_ITEM_ID)) {
 							this.tableModel.setValueAt("완료", i, 7);
 						}else {
 							// Bomline 추가
-							childItem = findItem(TCSession, "Item", itemId);
+							childItem = TCUtils.findItem(tcSession, MBOMConstants.TYPE_MBOM_TOP_ITEM , itemId);
 							bomChildLine = bomTopLine.add( null, childItem.getLatestItemRevision(), null, false );
 							// Property 값 입력
-							bomChildLine.getTCProperty("bl_ref_designator").setStringValue(designator);
+							bomChildLine.getTCProperty(MBOMConstants.PROP_BOMLINE_REF_DESIGNATOR ).setStringValue(designator);
 							// 완료처리
 							this.tableModel.setValueAt("완료", i, 7);
 						}
@@ -309,10 +318,10 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 				
 				bomTopLine.add( null, phantomItem.getLatestItemRevision(), null, false );
 				
-				this.bomWindow.save();
+				bomWindow.save();
 				
 				// m2_MbomAddress 값이 'SMD'아이템 bomline 생성
-				bomPhantomLine = this.bomWindow.setWindowTopLine(null, phantomItem.getLatestItemRevision(), null, null);
+				bomPhantomLine = bomWindow.setWindowTopLine(null, phantomItem.getLatestItemRevision(), null, null);
 				
 				for(int i=0; i<this.tableModel.getRowCount(); i++) { 
 					itemId = this.tableModel.getValueAt(i, 1).toString(); 
@@ -321,19 +330,24 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 					if(mbomAdress != null && mbomAdress.length() > 0) { 
 						if(mbomAdress.equals("SMD")) {
 							// Bomline 추가
-							childItem = findItem(TCSession, "Item", itemId);
+							childItem = TCUtils.findItem(tcSession, MBOMConstants.TYPE_MBOM_PHANTOM_ITEM , itemId);
 							bomChildLine = bomPhantomLine.add( null, childItem.getLatestItemRevision(), null, false );
 							// Property 값 입력
-							bomChildLine.getTCProperty("m2_MbomAddress").setStringValue("SMD");
-							bomChildLine.getTCProperty("bl_ref_designator").setStringValue(designator);
+							
+							//bomChildLine.getTCProperty("m2_MbomAddress").setStringValue("SMD");
+							
+							bomChildLine.getTCProperty(MBOMConstants.PROP_BOMLINE_REF_DESIGNATOR).setStringValue(designator);
 							// 완료처리
 							this.tableModel.setValueAt("완료", i, 7);
 						}
 					}
 				}
 				
-				this.bomWindow.save();
-				this.bomWindow.close();
+				bomWindow.save();
+				bomWindow.close();
+				
+				openCreatedItem(tcSession, topItem);
+
 			
 			}catch (TCException e) {
 				// TODO Auto-generated catch block
@@ -343,6 +357,51 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		else if (obj.equals(this.cancelButton)){
 		  setVisible(false);
 		  dispose();
+		}
+	}
+	
+
+	private void openCreatedItem(TCSession session, final TCComponentItem topItem) {
+
+		
+		session.queueOperation(new AbstractAIFOperation("Open New MBOM Item") {
+			public void executeOperation() throws Exception
+			{
+				AbstractAIFApplication pseApp = AIFUtility.getActiveDesktop().getCurrentApplication();
+				pseApp.open(topItem);
+			}
+		});
+
+	}
+
+	private void validateCreateMBOM(MBOM mbom) throws InvalidMBOMCreationException {
+
+		String checkSourceName = "";
+		
+		try {
+
+			// 입력창 확인
+			String sTopId = mBomTopId.getText();
+			String sPhantomId = smdPhantomId.getText();
+			
+			checkSourceName = "M-BOM TOP ID" ;
+			
+			if(sTopId == null || sTopId.length() == 0 ) {
+				throw new Exception("M-BOM TOP ID 값이 입력되지 않았습니다.");
+			}
+			
+			checkSourceName = "SMD Phantom ID" ;
+			if(sPhantomId == null || sPhantomId.length() == 0) {
+				throw new Exception("SMD Phantom ID 값이 입력되지 않았습니다.");
+			}
+			
+			checkSourceName = "SAME ID" ;
+			if(sTopId.equals(sPhantomId)) {
+				throw new Exception("M-BOM TOP ID 값과 SMD Phantom ID 값이 동일합니다.");
+			}
+			
+		}catch(Throwable ex) {
+			throw new InvalidMBOMCreationException(checkSourceName, ex.getMessage());
 		}
 	}
 
@@ -387,8 +446,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	protected void updateSourceInfo(TCComponent sourceComp) {
 		
 		try {
-			//String sourceInfo = sourceComp.getStringProperty("bl_item_item_id") + " / " + sourceComp.getStringProperty("bl_item_object_name");
-			String sourceInfo = sourceComp.getProperty("bl_indented_title");
+			String sourceInfo = sourceComp.getProperty(MBOMConstants.PROP_BOMLINE_INDENTIED_TITLE);
 			this.jlblSourceObjInfo.setText(sourceInfo);
 		}catch(Throwable t) {
 			t.printStackTrace();
@@ -439,9 +497,10 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		
 	}
 	
-	protected void addTextFiledChangeListener(iTextField textField, MBOMLine bomLine, String propertyName) {
+	protected void addTextFiledChangeListener(PropertyProvideField textField, MBOMLine bomLine, String propertyName) {
 		
-		textField.addActionListener(bomLine.getDataChangeActionListener(propertyName));
+		textField.addActionListener(bomLine.getDataChangeActionListener(textField, propertyName));
+		
 	}
 	
 	@Override
@@ -464,7 +523,14 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		 if(mbomLine != null) {
 			 
 			try {
-				 String []  propNames = new String[] {"bl_item_item_id", "bl_item_object_name", "bl_quantity", "bl_sequence_no" , "m2_MbomAddress" , "bl_ref_designator"};
+				 String []  propNames = new String[] { 
+						 	MBOMConstants.PROP_BOMLINE_ITEM_ID, 
+						 	MBOMConstants.PROP_BOMLINE_OBJECT_NAME, 
+						 	MBOMConstants.PROP_BOMLINE_QANTITY , 
+						 	MBOMConstants.PROP_BOMLINE_SEQUENCE_NO , 
+						 	MBOMConstants.PROP_BOMLINE_MBOM_ADDRESS, 
+						 	MBOMConstants.PROP_BOMLINE_REF_DESIGNATOR
+						 	};
 				
 				 List<Object> properties = mbomLine.getProperties(propNames);
 				 
@@ -508,36 +574,4 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		this.resultTable.updateUI();
 	}
 
-	public TCComponentItem createItem(TCSession session, String type, String item_id, String item_name)
-	{
-		TCComponentItem item = null;
-		try
-		{
-		  TCComponentItemType itemType = (TCComponentItemType)session.getTypeComponent(type);
-		  item = itemType.create(item_id, "A", type, item_name, "", null);
-		
-		  session.getUser().getHomeFolder().add("contents", item);
-		}
-		catch (TCException e)
-		{
-		  e.printStackTrace();
-		}
-		
-		return item;
-	}
-	
-	public TCComponentItem findItem(TCSession session, String type, String item_id)
-	{
-		TCComponentItem item = null;
-		try
-		{
-		  TCComponentItemType itemType = (TCComponentItemType)session.getTypeComponent(type);
-		  item = itemType.find(item_id);
-		}
-		catch (TCException e)
-		{
-		  e.printStackTrace();
-		}
-		return item;
-	}
 }

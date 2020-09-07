@@ -3,7 +3,9 @@ package com.sdi.mbom.impl;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.text.JTextComponent;
 
@@ -11,6 +13,7 @@ import com.sdi.mbom.MBOMChangeEvent;
 import com.sdi.mbom.MBOMChangeEventHandler;
 import com.sdi.mbom.MBOMComponent;
 import com.sdi.mbom.MBOMLine;
+import com.sdi.mbom.PropertyUIProvider;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 
@@ -33,6 +36,8 @@ public class MBOMLineImpl implements MBOMLine {
 	private MBOMChangeEventHandler changeEventHandler;
 
 	private ActionListener actionListener;
+
+	private Map<String, PropertyUIProvider> propertyUIProviderMap;
 
 	MBOMLineImpl(String newObjectName){
 		this(newObjectName, NEW_ITEM_ID);
@@ -57,6 +62,7 @@ public class MBOMLineImpl implements MBOMLine {
 	MBOMLineImpl(TCComponentBOMLine bomline, boolean isPermanent, String newObjectName, String newItemId,  String[] refPropertyNames){
 		
 		this.childrenList =  new ArrayList<MBOMLine>();
+		this.propertyUIProviderMap = new HashMap<String, PropertyUIProvider>();
 		
 		this.isPermanent = isPermanent;
 		if(isPermanent) {
@@ -234,7 +240,7 @@ public class MBOMLineImpl implements MBOMLine {
 	}
 
 	@Override
-	public ActionListener getDataChangeActionListener(final String propertyName) {
+	public ActionListener getDataChangeActionListener(PropertyUIProvider propertyProvider, final String propertyName) {
 		
 		if(this.actionListener == null) {
 			this.actionListener = new ActionListener() {
@@ -255,10 +261,18 @@ public class MBOMLineImpl implements MBOMLine {
 			};
 		}
 		
+		addPropertyProvider(propertyName, propertyProvider);
+		
 		return this.actionListener;
 	}
 	
 	
+	protected void addPropertyProvider(String propertyName, PropertyUIProvider propertyProvider) {
+		if(!this.propertyUIProviderMap.containsKey(propertyName) || this.propertyUIProviderMap.get(propertyName) != propertyProvider) {
+			this.propertyUIProviderMap.put(propertyName, propertyProvider );
+		}
+	}
+
 	private void propetyUpdate(String propertyName, String value ) {
 		
 		if("item_id".equals(propertyName)) {
