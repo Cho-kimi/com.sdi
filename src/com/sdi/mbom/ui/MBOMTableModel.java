@@ -11,7 +11,7 @@ import javax.swing.table.DefaultTableModel;
  * @author 
  *
  */
-public class DialogTableModel extends DefaultTableModel {
+public class MBOMTableModel extends DefaultTableModel {
 
 	/**
 	 * 
@@ -21,23 +21,22 @@ public class DialogTableModel extends DefaultTableModel {
 	/**
 	 * 
 	 */
-	public DialogTableModel() {
+	public MBOMTableModel() {
 	}
 
 	/**
 	 * @param rowCount
 	 * @param columnCount
 	 */
-	public DialogTableModel(int rowCount, int columnCount) {
+	public MBOMTableModel(int rowCount, int columnCount) {
 		super(rowCount, columnCount);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
 	 * @param columnNames
 	 * @param rowCount
 	 */
-	public DialogTableModel(Vector<?> columnNames, int rowCount) {
+	public MBOMTableModel(Vector<String> columnNames, int rowCount) {
 		super(columnNames, rowCount);
 	}
 
@@ -45,7 +44,7 @@ public class DialogTableModel extends DefaultTableModel {
 	 * @param columnNames
 	 * @param rowCount
 	 */
-	public DialogTableModel(Object[] columnNames, int rowCount) {
+	public MBOMTableModel(String[] columnNames, int rowCount) {
 		super(columnNames, rowCount);
 	}
 
@@ -53,20 +52,21 @@ public class DialogTableModel extends DefaultTableModel {
 	 * @param data
 	 * @param columnNames
 	 */
-	public DialogTableModel(Vector<?> data, Vector<?> columnNames) {
+	public MBOMTableModel(Vector<MBOMLineTableRow> data, Vector<String> columnNames) {
 		super(data, columnNames);
 	}
-
-	/**
-	 * @param data
-	 * @param columnNames
-	 */
-	public DialogTableModel(Object[][] data, Object[] columnNames) {
-		super(data, columnNames);
+	
+	public MBOMLineTableRow getRowAt(int row) {
+		return (MBOMLineTableRow)this.dataVector.elementAt(row);
 	}
-
+	
 	//Set Not Editable Table
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 	    return false;
+	}
+
+	public void clearData() {
+		this.getDataVector().clear();
+		this.fireTableDataChanged();
 	}
 }

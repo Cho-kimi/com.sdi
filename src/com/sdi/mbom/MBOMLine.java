@@ -4,8 +4,16 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
-import com.teamcenter.rac.util.iTextField;
 
+/**
+ * @Copyright : KIMIES
+ * @author   : Á¶¼ºÇö
+ * @since    : 2020. 08. 30
+ * 
+ * Package ID : com.sdi.mbom.MBOMLine.java
+ * Type : Interface
+ * 
+ */
 public interface MBOMLine extends MBOMComponent {
 
 	public static final String NEW_ITEM_ID = "NEED NEW ITEM ID";
@@ -14,30 +22,39 @@ public interface MBOMLine extends MBOMComponent {
 	
 	public TCComponentBOMLine getPermanentBOMLine();
 
-	public String getName();
+	public void setPermanentBOMLine(TCComponentBOMLine bomLine);
 	
-	MBOMLine[] getChildren();
+	public int getMBOMLineLevel();
 
-	List<MBOMLine> getChildrenList();
+	public MBOMLine getParent();
 
-	void addChildBOMLines(List<MBOMLine> mbomLines);
-
-	void addChildBOMLine(MBOMLine generateMBOMLine);
-
-	TCComponentBOMLine getSourceBOMLine();
-
-	String[] getRefPropertyNames();
-
-	String getTargetItemId();
-
-	void setTargetItemId(String targetItemId);
+	public void setParent(MBOMLine parent);
 	
-	int getChildrenCount();
-	
-	List<Object> getProperties(String [] propNames);
+	public MBOMLine[] getChildren();
 
-	void setMBOMChangeEventHandler(MBOMChangeEventHandler handler);
+	public List<MBOMLine> getChildrenList();
+
+	public void addChildBOMLines(List<MBOMLine> mbomLines);
+
+	public void addChildBOMLine(MBOMLine generateMBOMLine);
+
+	public void removeChildBOMLine(MBOMLine childMBOMLine);
 	
-	ActionListener getDataChangeActionListener(PropertyUIProvider propertyProvider, String properyName);
+	public TCComponentBOMLine getSourceBOMLine();
+
+	public String[] getRefPropertyNames();
+
+	public String getTargetItemId();
+
+	public void setTargetItemId(String targetItemId);
+	
+	public int getChildrenCount();
+	
+	public void setMBOMChangeEventHandler(MBOMChangeEventHandler handler);
+	
+	public ActionListener getDataChangeActionListener(PropertyUIProvider propertyProvider, String properyName);
+
+	public PropertyUIProvider getPropertyUIProvider(String propertyName);
+
 	
 }

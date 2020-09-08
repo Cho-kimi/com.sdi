@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Plm
-Bundle-SymbolicName: com.sdi;singleton:=true
+Bundle-Name: KIMI Teamcenter EDA Addon
+Bundle-SymbolicName: com.kimi.sdi4EDA;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Vendor: SDI
+Bundle-Vendor: KIMIES
 Automatic-Module-Name: com.sdi.plm
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: com.teamcenter.rac.kernel;bundle-version="12000.2.0",
@@ -12,7 +12,9 @@ Require-Bundle: com.teamcenter.rac.kernel;bundle-version="12000.2.0",
  com.teamcenter.rac.tcapps;bundle-version="12000.2.0",
  com.teamcenter.rac.util;bundle-version="12000.2.0",
  org.eclipse.core.commands;bundle-version="3.9.200",
- org.eclipse.core.runtime;bundle-version="3.15.100"
+ org.eclipse.core.runtime;bundle-version="3.15.100",
+ com.teamcenter.rac.pse;bundle-version="12000.2.0",
+ org.eclipse.ui;bundle-version="3.111.0"
 Export-Package: com.sdi.commands.addMBom;uses:="com.sdi.mbom,com.teamcenter.rac.aif",
  com.sdi.common;uses:="com.teamcenter.rac.kernel,com.teamcenter.rac.common",
  com.sdi.handlers;uses:="org.eclipse.core.commands",

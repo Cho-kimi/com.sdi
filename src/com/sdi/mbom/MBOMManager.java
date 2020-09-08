@@ -32,13 +32,19 @@ public class MBOMManager {
 		return getInstance()._getBuilder();
 	}
 	
+	public static MBOMHelper getHelper() {		
+		
+		return getInstance()._getHelper();
+	}
+
+	
 	protected MBOMBuilder _getBuilder() {
 	
-		return new MBOMBuilderImpl(_instance);
+		return new MBOMBuilderImpl();
 		
 	}
 	
-	public MBOMHelper getHelper() {
+	public MBOMHelper _getHelper() {
 		
 		return MBOMHelperImpl.getHelper();
 		

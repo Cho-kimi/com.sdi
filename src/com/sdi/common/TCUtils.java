@@ -3,6 +3,7 @@
  */
 package com.sdi.common;
 
+import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMWindow;
 import com.teamcenter.rac.kernel.TCComponentItem;
@@ -75,6 +76,10 @@ public class TCUtils {
 			return instance.getTypeComponent();
 		}
 		return session.getTypeComponent(typeName);
+	}
+
+	public static TCSession getDefaultSession() {
+		return  (TCSession)AIFUtility.getSessionManager().getDefaultSession();
 	}
 
 }

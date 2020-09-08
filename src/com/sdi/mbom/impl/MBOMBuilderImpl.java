@@ -29,11 +29,8 @@ import com.teamcenter.rac.kernel.TCComponentItemRevision;
 public class MBOMBuilderImpl implements MBOMBuilder {
 	
 	
-	private MBOMManager manager;
-	
-	
-	public MBOMBuilderImpl(MBOMManager manager) {
-		this.manager = manager;
+	public MBOMBuilderImpl() {
+		
 	}
 
 	@Override
@@ -60,11 +57,6 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 				
 				if(topBOMLine != null && topBOMLine.getChildrenCount() > 0) {
 					
-					//Pack이 되어 있으면 BOMLine 속성을 제대로 가져올 수 없으므로 Unpack한다.
-					if(topBOMLine.isPacked()) {
-						topBOMLine.unpack();
-					}
-					
 					String topMBOMLineName  = topBOMLine.getProperty(MBOMConstants.PROP_BOMLINE_OBJECT_NAME);  
 					String relatedTopItemId = topBOMLine.getProperty(MBOMConstants.PROP_BOMLINE_ITEM_ID);  
 					
@@ -86,7 +78,6 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 						
 						//생산 구분자가 있는 경우에는 Phantom BOMLine을 생성하여 하위에 붙이기 위해 Phantom BOMLine을 가져온다.(최초에는 생성)
 						if(address != null && address.length() > 0) {
-							
 							MBOMLine phantomMBOMLine = findPhantomChildBOMLine(phantomMBOMLines, address, relatedTopItemId, preMBOM);
 							phantomMBOMLine.addChildBOMLine(childMBOMLine);
 							
@@ -172,7 +163,7 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 
 	@Override
 	public MBOMHelper getHelper() {
-		return this.manager.getHelper();
+		return MBOMManager.getHelper();
 	}	
 	
 

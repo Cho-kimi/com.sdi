@@ -14,12 +14,15 @@ import com.sdi.mbom.MBOMLine;
 import com.sdi.mbom.PreMBOM;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentBOMWindow;
 
 public class PreMBOMImpl implements PreMBOM{
 	
 	private static final int MAX_THREAD_POOL = 5;
 	
 	private TCComponent sourceComponent;
+	
+	private TCComponentBOMWindow bomWindow;
 	
 	private MBOMLine topBOMLine;
 
@@ -108,6 +111,19 @@ public class PreMBOMImpl implements PreMBOM{
 			});
 		}
 		executorService.shutdown();
+	}
+
+	@Override
+	public void setBOMWindow(TCComponentBOMWindow bomWindow) {
+		this.bomWindow = bomWindow;
+	}
+
+	/**
+	 * @return the bomWindow
+	 */
+	@Override
+	public TCComponentBOMWindow getBOMWindow() {
+		return bomWindow;
 	}
 
 }
