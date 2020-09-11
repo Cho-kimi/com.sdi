@@ -54,6 +54,7 @@ import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.pse.operations.UnpackOperation;
 import com.teamcenter.rac.util.MessageBox;
 import com.teamcenter.rac.util.PropertyLayout;
+import com.teamcenter.rac.util.Registry;
 import com.teamcenter.rac.util.VerticalLayout;
 
 /**
@@ -67,6 +68,9 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	 * 
 	 */
 	private static final long serialVersionUID = 3620775456570162810L;
+	
+	
+	private static Registry registry = Registry.getRegistry(com.sdi.mbom.MBOM.class);	
 	
 	public static String []  DEFAULT_BOMLINE_COLUMN_PROPS = new String[] { 
 				MBOMConstants.MBOM_LINE_LEVEL_HEADER, 
@@ -121,7 +125,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 	
 	private void initUI()
 	{
-		setTitle("M-BOM 생성");
+		setTitle(registry.getString("TITLE_MBOM_DIALOG", "Build New M-BOM"));
 		
 		MBOMManager.getHelper().setMBOMLineCopyPorpNames(DEFAULT_BOMLINE_REF_COPY_PROPNAMES);
 		
@@ -146,7 +150,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		
 		//JPanel leftPanel = new JPanel(new BorderLayout(3,3));
 		
-		JLabel  jlblTargetID = new JLabel("Source Item : ");
+		JLabel  jlblTargetID = new JLabel(registry.getString("LABEL_TXT_SOURCE_ITEM", "Source Item : "));
 		jlblTargetID.setPreferredSize(new Dimension(120, 25));
 		jlblTargetID.setHorizontalAlignment(SwingConstants.RIGHT);
 		//leftPanel.add(jlblTargetID);
@@ -188,8 +192,8 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		
 		messagePanel.add(progressPanel, BorderLayout.EAST);
 		
-		this.createButton = new JButton("생성");
-		this.cancelButton = new JButton("닫기");
+		this.createButton = new JButton(registry.getString("CREATE"));
+		this.cancelButton = new JButton(registry.getString("CLOSE"));
 		
 		buttonPanel.setOpaque(false);
 		
@@ -245,7 +249,18 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		JPanel tablePanel = new JPanel(new BorderLayout());
 		this.resultScrollPane = new JScrollPane();
 		
-		this.header = new String[] { "Lvl", "부품ID", "부품명", "수량", "찾기번호", "MBOMAddress", "참조지정자", "처리결과" };
+		this.header = new String[] { 
+				registry.getString("TABLE_HEADER_LEVEL", "Lvl"), 
+				registry.getString("TABLE_HEADER_PART_NO", "부품번호"), 
+				registry.getString("TABLE_HEADER_PART_NAME", "부품명"), 
+				registry.getString("TABLE_HEADER_QUANTITY", "수량"), 
+				registry.getString("TABLE_HEADER_FINDNO", "찾기번호"), 
+				registry.getString("TABLE_HEADER_MBOMADDRESS", "MBOMAddress"), 
+				registry.getString("TABLE_HEADER_REF_DESIGNATOR", "참조지정자"), 
+				registry.getString("TABLE_HEADER_STAUS", "처리결과") 
+		};
+		
+		
 		this.tableModel = new MBOMTableModel(this.header, 0) ;
 		
 		this.resultTable = new JTable(this.tableModel);
@@ -317,7 +332,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		else if (obj.equals(this.cancelButton)){
 			
 			if(isBusy()) {
-				MessageBox.post(this, "BOM 생성 작업중입니다. 작업 완료후 닫아 주십시요", "안내", MessageBox.INFORMATION);
+				MessageBox.post(this, registry.getString("MESSSAGE_MBOM_IS_WORKING_WAIT", "BOM 생성 작업중입니다. 작업 완료후 닫아 주십시요"), "Information", MessageBox.INFORMATION);
 			}else {
 				setVisible(false);
 				dispose();
@@ -352,7 +367,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 				            }
 				        });
 					}
-					throw new NullPointerException(MBOMLine.NEW_ITEM_ID + "값인 Item ID는 필수로 입력하여야 합니다.");
+					throw new NullPointerException(MBOMLine.NEW_ITEM_ID + registry.getString("MESSAGE_MBOM_NEW_ITEMID_NEED_MENDATORY ","값인 Item ID는 필수로 입력하여야 합니다."));
 				}else {
 					itemID = provider.getPropertyValue();
 				}
@@ -368,7 +383,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		}else if(bomlineStatus.equals(MBOMConstants.MBOM_LINE_STATUS_PROGRESS)){
 			targetItemRev = null;
 		}else {
-			throw new NullPointerException("BOM에 추가할 Item Revision 정보를 가져올 수 없습니다.");
+			throw new NullPointerException(registry.getString("MESSAGE_MBOM_NOT_FOUND_ITEM_REVISION_FOR_BE_ADDED_BOMLINE", "BOM에 추가할 Item Revision 정보를 가져올 수 없습니다."));
 		}
 		
 		return targetItemRev;
@@ -419,7 +434,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			validateCreateMBOM(preMBOM);
 		}catch(InvalidMBOMCreationException ivex) {
 			
-			MessageBox.post(this.parent, ivex.getMessage(), "경고-생성 데이터 검증 오류", MessageBox.WARNING);
+			MessageBox.post(this.parent, ivex.getMessage(), registry.getString("TITLE_WARNING_VALIDATION", "경고-생성 데이터 검증 오류"), MessageBox.WARNING);
 			return;
 		}
 		
@@ -534,17 +549,17 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			checkSourceName = "M-BOM TOP ID" ;
 			
 			if(sTopId == null || sTopId.length() == 0 ) {
-				throw new Exception("M-BOM TOP ID 값이 입력되지 않았습니다.");
+				throw new Exception(registry.getString("MESSAGE_MBOM_TOP_ID_IS_BLANK", "M-BOM TOP ID 값이 입력되지 않았습니다."));
 			}
 			
 			checkSourceName = "SMD Phantom ID" ;
 			if(sPhantomId == null || sPhantomId.length() == 0) {
-				throw new Exception("SMD Phantom ID 값이 입력되지 않았습니다.");
+				throw new Exception(registry.getString("MESSAGE_MBOM_SMD_PHANTOM_ID_IS_BLANK","SMD Phantom ID 값이 입력되지 않았습니다."));
 			}
 			
 			checkSourceName = "SAME ID" ;
 			if(sTopId.equals(sPhantomId)) {
-				throw new Exception("M-BOM TOP ID 값과 SMD Phantom ID 값이 동일합니다.");
+				throw new Exception(registry.getString("MESSAGE_MBOM_TOP_ID_AND_SMD_ID_IS_SAME", "M-BOM TOP ID 값과 SMD Phantom ID 값이 동일합니다."));
 			}
 			
 		}catch(Throwable ex) {
@@ -741,15 +756,16 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			TCSession tcSession = TCUtils.getDefaultSession();
 			TCComponentItem topItem = this.getMBOM().getTopBOMLine().getPermanentBOMLine().getItem();
 			if(topItem != null) {
-				this.messageFiled.setText("생성한 M-BOM을 로드합니다.");
+				this.messageFiled.setText(registry.getString("MESSAGE_MBOM_LOAD_NEW_MBOM", "Loading New Created M-BOM"));
 				openCreatedItem(tcSession, topItem);
+				MessageBox.post(this.parent, "", registry.getString("TITLE_MBOM_LOAD_CREATED_MBOM", "Load New M-BOM"), MessageBox.WARNING);
 			}else {
-				this.messageFiled.setText("생성된 M-BOM을 가져올 수 없습니다.");
-				MessageBox.post(this.parent, "생성된 M-BOM을 가져올 수 없습니다.", "생성한 MBOM 로드", MessageBox.WARNING);
+				this.messageFiled.setText(registry.getString("MESSAGE_MBOM_CANT_LOAD_NEW_MBOM", "Can't Load New Created M-BOM"));
+				MessageBox.post(this.parent, registry.getString("MESSAGE_MBOM_CANT_LOAD_NEW_MBOM", "Can't Load New Created M-BOM"), registry.getString("TITLE_MBOM_LOAD_CREATED_MBOM", "Load New M-BOM"), MessageBox.WARNING);
 			}
 		}catch(Throwable e) {
-			this.messageFiled.setText("생성된 M-BOM을 가져올 수 없습니다.");
-			MessageBox.post(this.parent, e.getMessage(), "생성한 MBOM 로드", MessageBox.ERROR);
+			this.messageFiled.setText(registry.getString("MESSAGE_MBOM_CANT_LOAD_NEW_MBOM", "Can't Load New Created M-BOM"));
+			MessageBox.post(this.parent, e.getMessage(), registry.getString("TITLE_MBOM_LOAD_CREATED_MBOM", "Load New M-BOM"), MessageBox.ERROR);
 		}
 	}
 
@@ -811,7 +827,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			
 		}catch(Throwable e) {
 			String message = e.getMessage();
-			MessageBox.post(message, "M-BOM Pre Build ERROR ",  MessageBox.ERROR);
+			MessageBox.post(message, registry.getString("TITLE_MBOM_COMMAND_ERROR", "M-BOM Pre Build ERROR "),  MessageBox.ERROR);
 		}
 	}
 	

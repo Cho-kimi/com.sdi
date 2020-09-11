@@ -21,6 +21,7 @@ import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentItem;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.util.Registry;
 
 /**
  * @author cspark
@@ -28,6 +29,7 @@ import com.teamcenter.rac.kernel.TCComponentItemRevision;
  */
 public class MBOMBuilderImpl implements MBOMBuilder {
 	
+	private static Registry registry = Registry.getRegistry(com.sdi.mbom.MBOM.class);	
 	
 	public MBOMBuilderImpl() {
 		
@@ -48,11 +50,11 @@ public class MBOMBuilderImpl implements MBOMBuilder {
 					topBOMLine =(TCComponentBOMLine)targetComp;
 					
 				}else if(targetComp  instanceof TCComponentItem){
-					throw new NotSupportedTypeException("MBOM 생성시 Item 유형은 지원하지 않습니다. BOMLine을 선택하여 주십시요");
+					throw new NotSupportedTypeException(registry.getString("MESSAGE_MBOM_NOT_SUPPORTED_ITEM_TYPE", "MBOM 생성시 Item 유형은 지원하지 않습니다. BOMLine을 선택하여 주십시요"));
 				}else if(targetComp  instanceof TCComponentItemRevision){
-					throw new NotSupportedTypeException("MBOM 생성시 Item Revision 유형은 지원하지 않습니다. BOMLine을 선택하여 주십시요");
+					throw new NotSupportedTypeException(registry.getString("MESSAGE_MBOM_NOT_SUPPORTED_ITEM_REVISION_TYPE","MBOM 생성시 Item Revision 유형은 지원하지 않습니다. BOMLine을 선택하여 주십시요"));
 				}else {
-					throw new NotSupportedTypeException("MBOM 생성을 지원하지 않는 유형이 선택되었습니다. BOMLine을 선택하여 주십시요");
+					throw new NotSupportedTypeException(registry.getString("MESSAGE_MBOM_NOT_SUPPORTED_DATA_TYPE","MBOM 생성을 지원하지 않는 유형이 선택되었습니다. BOMLine을 선택하여 주십시요"));
 				}
 				
 				if(topBOMLine != null && topBOMLine.getChildrenCount() > 0) {

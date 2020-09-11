@@ -53,7 +53,7 @@ public class MBOMLineImpl implements MBOMLine {
 		this(permanentBOMLine, true, null, null, null);
 		
 		if(permanentBOMLine == null) {
-			throw new NullPointerException("주어진 BOMLine 정보가 없습니다.");
+			throw new NullPointerException("No Data given argument BOMLine for permernant");
 		}
 	}
 

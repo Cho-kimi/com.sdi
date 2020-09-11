@@ -15,15 +15,15 @@ Require-Bundle: com.teamcenter.rac.kernel;bundle-version="12000.2.0",
  org.eclipse.core.runtime;bundle-version="3.15.100",
  com.teamcenter.rac.pse;bundle-version="12000.2.0",
  org.eclipse.ui;bundle-version="3.111.0"
-Export-Package: com.sdi.commands.addMBom;uses:="com.sdi.mbom,com.teamcenter.rac.aif",
+Export-Package: com.sdi.commands.addMBom;uses:="com.teamcenter.rac.aif",
  com.sdi.common;uses:="com.teamcenter.rac.kernel,com.teamcenter.rac.common",
  com.sdi.handlers;uses:="org.eclipse.core.commands",
  com.sdi.mbom;uses:="com.teamcenter.rac.aif.kernel,com.teamcenter.rac.kernel,com.sdi.common",
  com.sdi.mbom.impl;uses:="com.teamcenter.rac.aif.kernel,com.teamcenter.rac.kernel,com.sdi.mbom",
  com.sdi.mbom.ui;
   uses:="com.teamcenter.rac.kernel,
-   javax.swing.table,
    com.teamcenter.rac.util,
+   javax.swing.table,
    javax.swing.text,
    com.sdi.mbom,
    com.teamcenter.rac.aif"

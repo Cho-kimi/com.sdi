@@ -41,13 +41,13 @@ public class MBOMConstants extends ExtTCCostants{
 
 	public static final String MBOM_LINE_STATUS_HEADER = "Status";
 
-	public static final String MBOM_LINE_STATUS_ADD = "추가";
+	public static final String MBOM_LINE_STATUS_ADD = "ADD";
 	
-	public static final String MBOM_LINE_STATUS_NEW = "신규";
+	public static final String MBOM_LINE_STATUS_NEW = "NEW";
 	
-	public static final String MBOM_LINE_STATUS_COMPLETE = "완료";
+	public static final String MBOM_LINE_STATUS_COMPLETE = "COMPLETE";
 	
-	public static final String MBOM_LINE_STATUS_PROGRESS = "처리중";
+	public static final String MBOM_LINE_STATUS_PROGRESS = "PROGRESS";
 
 	public static final String PROP_BLANK = "";
 
