@@ -18,8 +18,13 @@ import com.sdi.mbom.PropertyUIProvider;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.util.Registry;
 
 public class MBOMLineImpl implements MBOMLine {
+	
+	private static Registry registry = Registry.getRegistry(com.sdi.mbom.MBOM.class);
+	
+	protected static final String REG_STATUS_PRIFIX = "MBOMLINE_STATUS_"; 
 	
 	private List<MBOMLine> childrenList;
 
@@ -282,11 +287,11 @@ public class MBOMLineImpl implements MBOMLine {
 	public String getMBOMLineStatus() {
 
 		if(isPermanent() || this.getPermanentBOMLine() != null) {
-			return MBOMConstants.MBOM_LINE_STATUS_COMPLETE;
+			return registry.getString(REG_STATUS_PRIFIX + MBOMConstants.MBOM_LINE_STATUS_COMPLETE, MBOMConstants.MBOM_LINE_STATUS_COMPLETE);
 		}else if(getTargetItemId() != null ){
-			return MBOMConstants.MBOM_LINE_STATUS_NEW;
+			return registry.getString(REG_STATUS_PRIFIX + MBOMConstants.MBOM_LINE_STATUS_NEW, MBOMConstants.MBOM_LINE_STATUS_NEW);
 		}else if(getSourceBOMLine() != null ){
-			return MBOMConstants.MBOM_LINE_STATUS_ADD;
+			return registry.getString(REG_STATUS_PRIFIX + MBOMConstants.MBOM_LINE_STATUS_ADD, MBOMConstants.MBOM_LINE_STATUS_ADD);
 		}
 		return  MBOMConstants.PROP_BLANK;
 	}

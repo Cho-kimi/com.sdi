@@ -132,7 +132,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		
 		this.contentPane = ((JPanel)getContentPane());
 		this.contentPane.setBackground(new Color(250,250,250));
-		this.contentPane.setLayout(new VerticalLayout());
+		this.contentPane.setLayout(new VerticalLayout(20));
 		this.contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 		
 		this.contentPane.add("bound.bind.center.center", getHeaderPanel());
@@ -190,7 +190,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		JPanel progressPanel = new JPanel(new BorderLayout(2,2));
 		progressPanel.add(progressBar);
 		
-		messagePanel.add(progressPanel, BorderLayout.EAST);
+		messagePanel.add(progressPanel, BorderLayout.SOUTH);
 		
 		this.createButton = new JButton(registry.getString("CREATE"));
 		this.cancelButton = new JButton(registry.getString("CLOSE"));
@@ -431,10 +431,14 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		PreMBOM preMBOM = (PreMBOM)getMBOM();
 		
 		try {
-			validateCreateMBOM(preMBOM);
+			if(!validateCreateMBOM(preMBOM)) {
+				throw new Exception(registry.getString("MESSAGE_MBOM_ID_IS_INVALID"));
+			};
 		}catch(InvalidMBOMCreationException ivex) {
-			
 			MessageBox.post(this.parent, ivex.getMessage(), registry.getString("TITLE_WARNING_VALIDATION", "경고-생성 데이터 검증 오류"), MessageBox.WARNING);
+			return;
+		}catch(Exception ex) {
+			MessageBox.post(this.parent, ex.getMessage(), registry.getString("TITLE_WARNING_VALIDATION", "경고-생성 데이터 검증 오류"), MessageBox.ERROR);
 			return;
 		}
 		
@@ -536,7 +540,7 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		});
 	}
 
-	protected void validateCreateMBOM(MBOM mbom) throws InvalidMBOMCreationException {
+	protected boolean validateCreateMBOM(MBOM mbom) throws InvalidMBOMCreationException {
 
 		String checkSourceName = "";
 		
@@ -550,6 +554,8 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 			
 			if(sTopId == null || sTopId.length() == 0 ) {
 				throw new Exception(registry.getString("MESSAGE_MBOM_TOP_ID_IS_BLANK", "M-BOM TOP ID 값이 입력되지 않았습니다."));
+			}else {
+				
 			}
 			
 			checkSourceName = "SMD Phantom ID" ;
@@ -565,6 +571,36 @@ public class AddMBomFormDialog extends AbstractAIFDialog implements ActionListen
 		}catch(Throwable ex) {
 			throw new InvalidMBOMCreationException(checkSourceName, ex.getMessage());
 		}
+		
+		return true;
+	}
+	
+	/**
+	 * 
+	 * @param comp
+	 * @param ItemType
+	 * @param FieldName
+	 * @param isMandatory
+	 * @return
+	 * @throws InvalidMBOMCreationException
+	 * @throws TCException 
+	 */
+	protected boolean isValidNewItemID(TCSession session, JTextComponent comp, String ItemType, String FieldName, boolean isMandatory) throws Exception {
+		
+		String newItemId = comp.getText();
+		if(newItemId == null || newItemId.length() == 0 ) {
+			if(isMandatory) {
+				comp.setFocusable(true);
+				throw new InvalidMBOMCreationException(FieldName, registry.getString("MESSAGE_MBOM_NEW_ITEMID_IS_BLANK", FieldName + "값이 입력되지 않았습니다."));
+			}
+		}else{
+			TCComponentItem existItem = TCUtils.findItem(session, ItemType, newItemId);
+			if(existItem != null) {
+				comp.setFocusable(true);
+				throw new InvalidMBOMCreationException(FieldName, registry.getString("MESSAGE_MBOM_NEW_ITEMID_IS_EXIST", FieldName + "의 ID는 이미 존재하는 아이템입니다."));
+			}
+		}
+		return true;
 	}
 
 
